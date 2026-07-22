@@ -4,7 +4,6 @@ from difflib import get_close_matches
 from services.gemini_service import GeminiService
 
 
-
 class SalesChartAI:
 
 
@@ -13,14 +12,14 @@ class SalesChartAI:
         self.df = df.copy()
 
 
-    # ----------------------------
-    # Convert numeric text columns
-    # ----------------------------
+
+    # -------------------------------
+    # Convert text numbers to numeric
+    # -------------------------------
 
     def convert_numeric_columns(self):
 
         for col in self.df.columns:
-
 
             if self.df[col].dtype == "object":
 
@@ -32,10 +31,6 @@ class SalesChartAI:
                         "",
                         regex=True
                     )
-                    .replace(
-                        "",
-                        pd.NA
-                    )
                 )
 
 
@@ -45,91 +40,152 @@ class SalesChartAI:
                 )
 
 
-                # Convert only useful numeric columns
+                valid_ratio = (
+                    converted.notna().sum()
+                    /
+                    len(self.df)
+                )
 
-                if converted.notna().sum() > len(self.df)*0.3:
+
+                # Convert only meaningful numeric columns
+
+                if valid_ratio > 0.3:
 
                     self.df[col] = converted
 
 
 
-    # ----------------------------
-    # Match Gemini columns
-    # ----------------------------
+    # -------------------------------
+    # Find closest column name
+    # -------------------------------
 
     def closest_column(self, name):
 
-        cols = list(self.df.columns)
+        if not name:
+            return None
 
 
-        if name in cols:
+        columns = list(
+            self.df.columns
+        )
+
+
+        if name in columns:
 
             return name
 
 
         matches = get_close_matches(
+
             name,
-            cols,
+
+            columns,
+
             n=1,
+
             cutoff=0.5
         )
 
 
-        if matches:
-
-            return matches[0]
-
-
-        return None
+        return matches[0] if matches else None
 
 
 
-    # ----------------------------
-    # Remove ID columns
-    # ----------------------------
+    # -------------------------------
+    # Remove unwanted columns
+    # -------------------------------
 
-    def remove_identifier_columns(self, cols):
+    def remove_bad_columns(self, columns):
 
         ignore = [
 
             "id",
-            "product_id",
-            "user_id",
-            "review_id",
+            "row id",
+            "row_id",
+            "order id",
             "order_id",
+            "customer id",
             "customer_id",
+            "product id",
+            "product_id",
+            "user id",
+            "user_id",
+            "review id",
+            "review_id",
+            "postal code",
+            "postal_code",
+            "zip",
             "img_link",
             "product_link"
 
         ]
 
 
-        return [
+        result = []
 
-            c for c in cols
 
-            if c.lower() not in ignore
+        for col in columns:
+
+            if col.lower() not in ignore:
+
+                result.append(col)
+
+
+        return result
+
+
+
+    # -------------------------------
+    # Select best numeric column
+    # -------------------------------
+
+    def select_numeric_column(self, numeric_cols):
+
+        priority = [
+
+            "sales",
+            "revenue",
+            "amount",
+            "price",
+            "actual_price",
+            "discounted_price",
+            "profit",
+            "rating_count",
+            "rating",
+            "quantity"
 
         ]
 
 
+        for p in priority:
 
-    # ----------------------------
-    # Main function
-    # ----------------------------
+            for col in numeric_cols:
+
+                if col.lower() == p:
+
+                    return col
+
+
+
+        return numeric_cols[0]
+
+
+
+    # -------------------------------
+    # Main chart generator
+    # -------------------------------
 
     def generate(self):
 
 
-        # FIRST CLEAN DATA
+        # Step 1
+        # Convert numeric text
 
         self.convert_numeric_columns()
 
 
 
-        print(
-            "Columns after conversion:"
-        )
+        print("\nCOLUMN TYPES")
 
         print(
             self.df.dtypes
@@ -137,16 +193,25 @@ class SalesChartAI:
 
 
 
+        # Step 2
         # Gemini recommendation
+
 
         chart = GeminiService().get_sales_chart(
             self.df
         )
 
 
-        print("\n GEMINI RESPONSE")
+        print(
+            "\nGEMINI RESPONSE"
+        )
+
         print(chart)
 
+
+
+        # Step 3
+        # Match columns
 
 
         x = self.closest_column(
@@ -160,52 +225,63 @@ class SalesChartAI:
 
 
 
-        print("\nMatched Columns")
-        print("X =",x)
-        print("Y =",y)
+        # Step 4
+        # Validate y-axis
 
 
-
-        # ----------------------------
-        # Fallback logic
-        # ----------------------------
-
-
-        object_cols = (
+        numeric_columns = (
 
             self.df
-            .select_dtypes(include=["object"])
+            .select_dtypes(
+                include="number"
+            )
             .columns
             .tolist()
 
         )
 
 
-        numeric_cols = (
+        numeric_columns = self.remove_bad_columns(
+            numeric_columns
+        )
+
+
+
+        if y not in numeric_columns:
+
+            y = self.select_numeric_column(
+                numeric_columns
+            )
+
+
+
+        # Step 5
+        # Validate x-axis
+
+
+        object_columns = (
 
             self.df
-            .select_dtypes(include="number")
+            .select_dtypes(
+                include="object"
+            )
             .columns
             .tolist()
 
         )
 
 
-        object_cols = self.remove_identifier_columns(
-            object_cols
-        )
-
-        numeric_cols = self.remove_identifier_columns(
-            numeric_cols
+        object_columns = self.remove_bad_columns(
+            object_columns
         )
 
 
+        if x not in object_columns:
 
-        if x is None:
 
-            if object_cols:
+            if object_columns:
 
-                x = object_cols[0]
+                x = object_columns[0]
 
             else:
 
@@ -213,49 +289,31 @@ class SalesChartAI:
 
 
 
-        if y is None or y not in numeric_cols:
+        print("\nFINAL COLUMNS")
 
-
-            if numeric_cols:
-
-                priority = [
-
-                    "sales",
-                    "revenue",
-                    "amount",
-                    "actual_price",
-                    "discounted_price",
-                    "profit",
-                    "rating",
-                    "quantity"
-
-                ]
-
-
-                y = next(
-                    (
-                        c for c in numeric_cols
-                        if c.lower() in priority
-                    ),
-                    numeric_cols[0]
-                )
-
-
-            else:
-
-                raise Exception(
-                    "No numeric data found"
-                )
-
-
-
-        # Ensure numeric
-
-        self.df[y] = pd.to_numeric(
-            self.df[y],
-            errors="coerce"
+        print(
+            "X =",
+            x
         )
 
+        print(
+            "Y =",
+            y
+        )
+
+
+
+        # Step 6
+        # Clean numeric data
+
+
+        self.df[y] = pd.to_numeric(
+
+            self.df[y],
+
+            errors="coerce"
+
+        )
 
 
         self.df = self.df.dropna(
@@ -267,9 +325,13 @@ class SalesChartAI:
         if self.df.empty:
 
             raise Exception(
-                f"No numeric data found in {y}"
+                "No valid numeric data found"
             )
 
+
+
+        # Step 7
+        # Aggregation
 
 
         aggregation = chart.get(
@@ -282,73 +344,94 @@ class SalesChartAI:
         if aggregation == "mean":
 
             result = (
+
                 self.df
                 .groupby(x)[y]
                 .mean()
                 .reset_index()
+
             )
 
 
         elif aggregation == "count":
 
             result = (
+
                 self.df
                 .groupby(x)[y]
                 .count()
                 .reset_index()
+
             )
 
 
         else:
 
             result = (
+
                 self.df
                 .groupby(x)[y]
                 .sum()
                 .reset_index()
+
             )
 
 
 
+        # Top 10 values
+
         result = (
+
             result
             .sort_values(
                 y,
                 ascending=False
             )
             .head(10)
+
+        )
+
+
+        result[x] = (
+
+            result[x]
+            .astype(str)
+
         )
 
 
 
-        result[x] = result[x].astype(str)
+        print(
+            "\nCHART DATA"
+        )
 
-
-
-        print("\nChart Data")
-        print(result.head())
+        print(result)
 
 
 
         return {
 
 
-            "chartType": chart.get(
-                "chartType",
-                "bar"
-            ),
+            "chartType":
+                chart.get(
+                    "chartType",
+                    "bar"
+                ),
 
 
-            "title": chart.get(
-                "title",
-                "Business Analysis"
-            ),
+            "title":
+                chart.get(
+                    "title",
+                    "Business Analysis"
+                ),
 
 
-            "xAxis": x,
+            "xAxis":
+                x,
 
 
-            "yAxis": y,
+            "yAxis":
+                y,
 
 
             "data":
