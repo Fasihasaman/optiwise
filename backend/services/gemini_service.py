@@ -1,370 +1,106 @@
 import os
 import json
-import pandas as pd
-
+from google.genai.errors import ClientError
 from google import genai
 
-
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
-
+client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 
 class GeminiService:
 
-
     def get_sales_chart(self, df):
-
 
         columns = list(df.columns)
 
+        summary = {
+            "rows": len(df),
+            "columns": columns,
+            "sample": df.head(5).to_dict("records")
+        }
 
         prompt = f"""
+You are an expert Business Intelligence analyst.
 
-You are a Business Intelligence analyst.
+Your task is to recommend the BEST sales visualization for this dataset.
 
-Recommend the best visualization for this dataset.
+IMPORTANT RULES
 
-Rules:
+1. Use ONLY the column names listed below.
+2. NEVER rename or invent column names.
+3. xAxis and yAxis MUST exactly match one of the available columns.
+4. Return ONLY valid JSON.
+5. Prefer charts that provide meaningful business insights.
 
-1. Use only existing column names.
-2. xAxis must be categorical.
-3. yAxis must be numeric.
-4. Do not select ID columns.
-5. Do not select URL columns.
-6. Return only JSON.
+CHART SELECTION RULES
 
-Available columns:
+• If a date column exists, use it on the x-axis with the sales column on the y-axis and choose a line chart.
+• Otherwise, use the best categorical column on the x-axis and a numeric sales-related column on the y-axis.
+• Prefer detailed categorical columns over generic ones.
 
+Priority for x-axis:
+1. Sub-Category
+2. Product Name
+3. Product
+4. Product Category
+5. Segment
+6. Region
+7. State
+8. Category (only if nothing better exists)
+
+Priority for y-axis:
+1. Sales
+2. Revenue
+3. Amount
+4. Profit
+5. Discounted Price
+6. Price
+7. Quantity
+
+Aggregation:
+• Sales/Revenue/Amount/Price -> sum
+• Quantity -> sum
+• Profit -> sum
+
+Available Columns:
 {columns}
 
+Dataset Information:
+Rows: {summary["rows"]}
 
-Return format:
+Sample Data:
+{summary["sample"]}
+
+Return ONLY this JSON:
 
 {{
-"chartType":"bar",
-"title":"Business Analysis",
-"xAxis":"",
-"yAxis":"",
-"aggregation":"sum"
+    "chartType":"bar",
+    "title":"Sales by Sub-Category",
+    "xAxis":"",
+    "yAxis":"",
+    "aggregation":"sum"
 }}
-
 """
-
 
         try:
 
-
             response = client.models.generate_content(
-
                 model="gemini-2.0-flash",
-
                 contents=prompt
-
             )
-
 
             text = response.text.strip()
-
-
-            text = (
-                text
-                .replace(
-                    "```json",
-                    ""
-                )
-                .replace(
-                    "```",
-                    ""
-                )
-            )
-
+            text = text.replace("```json", "").replace("```", "")
 
             return json.loads(text)
 
-
-
         except Exception as e:
 
-
-            print(
-                "Gemini Chart Error:",
-                e
-            )
-
-
-            print(
-                "USING LOCAL FALLBACK"
-            )
-
-
-            return self.local_chart(df)
-
-
-
-
-
-    # --------------------------------
-    # Local chart recommendation
-    # --------------------------------
-
-    def local_chart(self, df):
-
-
-        df = df.copy()
-
-
-
-        # Convert numeric text columns
-
-        for col in df.columns:
-
-
-            if df[col].dtype == "object":
-
-
-                cleaned = (
-
-                    df[col]
-                    .astype(str)
-
-                    .str.replace(
-                        ",",
-                        "",
-                        regex=False
-                    )
-
-                    .str.replace(
-                        "₹",
-                        "",
-                        regex=False
-                    )
-
-                    .str.replace(
-                        "%",
-                        "",
-                        regex=False
-                    )
-
-                    .str.extract(
-                        r"([-+]?\d*\.?\d+)"
-                    )[0]
-
-                )
-
-
-                converted = pd.to_numeric(
-
-                    cleaned,
-
-                    errors="coerce"
-
-                )
-
-
-                if converted.notna().sum() > 5:
-
-                    df[col] = converted
-
-
-
-
-
-        # Find numeric columns
-
-
-        numeric_cols = (
-
-            df
-            .select_dtypes(
-                include="number"
-            )
-            .columns
-            .tolist()
-
-        )
-
-
-
-        # Remove unwanted numeric columns
-
-
-        ignore_numeric = [
-
-            "id",
-            "row id",
-            "row_id",
-            "postal code",
-            "postal_code"
-
-        ]
-
-
-
-        numeric_cols = [
-
-            c for c in numeric_cols
-
-            if c.lower()
-            not in ignore_numeric
-
-        ]
-
-
-
-
-
-        # Find categorical columns
-
-
-        object_cols = (
-
-            df
-            .select_dtypes(
-                include="object"
-            )
-            .columns
-            .tolist()
-
-        )
-
-
-
-        ignore_object = [
-
-            "product_id",
-            "customer_id",
-            "user_id",
-            "review_id",
-            "order_id",
-            "product_link",
-            "img_link"
-
-        ]
-
-
-
-        object_cols = [
-
-            c for c in object_cols
-
-            if c.lower()
-            not in ignore_object
-
-        ]
-
-
-
-
-
-        # Select X column
-
-
-        if "category" in df.columns:
-
-            x = "category"
-
-
-        elif object_cols:
-
-            x = object_cols[0]
-
-
-        else:
-
-            x = df.columns[0]
-
-
-
-
-
-        # Select Y column
-
-
-        priority = [
-
-            "sales",
-            "revenue",
-            "amount",
-            "profit",
-            "actual_price",
-            "discounted_price",
-            "price",
-            "rating_count",
-            "rating",
-            "quantity"
-
-        ]
-
-
-
-        y = None
-
-
-
-        for p in priority:
-
-
-            for col in numeric_cols:
-
-
-                if col.lower() == p:
-
-                    y = col
-
-                    break
-
-
-
-            if y:
-
-                break
-
-
-
-        if y is None:
-
-
-            if numeric_cols:
-
-                y = numeric_cols[0]
-
-
-            else:
-
-                raise Exception(
-                    "No numeric column available"
-                )
-
-
-
-
-
-        print(
-            "LOCAL CHART:",
-            x,
-            y
-        )
-
-
-
-        return {
-
-
-            "chartType":"bar",
-
-
-            "title":
-                f"{y} Analysis",
-
-
-            "xAxis":x,
-
-
-            "yAxis":y,
-
-
-            "aggregation":"sum"
-
-        }
+            print("Gemini Chart Error:", e)
+
+            return {
+                "chartType": "bar",
+                "title": "Sales Analysis",
+                "xAxis": "",
+                "yAxis": "",
+                "aggregation": "sum"
+            }
