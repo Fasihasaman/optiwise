@@ -40,8 +40,10 @@ export default function DatasetExplorer() {
 
             setLoading(true);
 
-            const res = await axios.get(
-                "http://127.0.0.1:5000/dataset-explorer"
+            const API = import.meta.env.VITE_API_URL;
+
+            await axios.get(
+                `${API}/dataset-explorer`
             );
             console.log(res.data);
             setRows(res.data.sample || []);

@@ -38,11 +38,13 @@ export default function Upload() {
                 selectedFile
             );
 
-            const res =
-                await axios.post(
-                    "http://localhost:5000/upload",
-                    formData
-                );
+            
+            const API = import.meta.env.VITE_API_URL;
+
+            await axios.post(
+            `${API}/upload`,
+             formData
+              );
 
             // SAVE DASHBOARD DATA
 

@@ -31,14 +31,14 @@ export default function AskData() {
 
         try {
 
-            const response =
-                await axios.post(
-                    "http://localhost:5000/ask",
-                    {
-                        question:
-                            currentQuestion
-                    }
-                );
+            const API = import.meta.env.VITE_API_URL;
+
+            const response = await axios.post(
+                `${API}/ask`,
+                {
+                    question: currentQuestion
+                }
+            );
 
             // AI MESSAGE
 
@@ -84,13 +84,13 @@ export default function AskData() {
         }
     };
     const handleSuggestion = (question) => {
-    setQ(question);
+        setQ(question);
 
-    setTimeout(() => {
-        const input = document.querySelector("input");
-        if (input) input.focus();
-    }, 100);
-};
+        setTimeout(() => {
+            const input = document.querySelector("input");
+            if (input) input.focus();
+        }, 100);
+    };
 
     return (
 
@@ -103,10 +103,10 @@ export default function AskData() {
                  bg-gradient-to-r from-yellow-950 to-gray-700
             "
 
-           style={{
-                    backgroundImage:
-                        "url('https://www.cumanagement.com/sites/default/files/2021-08/hand-chatbot-technology-background.jpg')"
-                }}
+            style={{
+                backgroundImage:
+                    "url('https://www.cumanagement.com/sites/default/files/2021-08/hand-chatbot-technology-background.jpg')"
+            }}
         >
 
             {/* MAIN CONTENT */}
@@ -177,7 +177,7 @@ export default function AskData() {
                                 ">
 
                                     Welcome to OptiWise AI
-                                    
+
 
                                 </h2>
 
@@ -196,8 +196,8 @@ export default function AskData() {
 
                                 {/* SUGGESTION SECTION */}
 
-<div
-    className="
+                                <div
+                                    className="
         mt-10
         max-w-4xl
         mx-auto
@@ -209,35 +209,35 @@ export default function AskData() {
         p-8
         shadow-2xl
     "
->
+                                >
 
-    <h3
-        className="
+                                    <h3
+                                        className="
             text-3xl
             font-bold
             text-slate-950
             mb-6
         "
-    >
-        Questions
-    </h3>
+                                    >
+                                        Questions
+                                    </h3>
 
-    <div
-        className="
+                                    <div
+                                        className="
             flex
             flex-wrap
             gap-4
             justify-center
         "
-    >
+                                    >
 
-        <button
-            onClick={() =>
-                handleSuggestion(
-                    "What is the total sales?"
-                )
-            }
-            className="
+                                        <button
+                                            onClick={() =>
+                                                handleSuggestion(
+                                                    "What is the total sales?"
+                                                )
+                                            }
+                                            className="
                 bg-gray-50
                 border
                 border-yellow-50
@@ -251,17 +251,17 @@ export default function AskData() {
                 transition-all
                 duration-300
             "
-        >
-            Total Sales
-        </button>
+                                        >
+                                            Total Sales
+                                        </button>
 
-        <button
-            onClick={() =>
-                handleSuggestion(
-                    "Show profit analysis"
-                )
-            }
-            className="
+                                        <button
+                                            onClick={() =>
+                                                handleSuggestion(
+                                                    "Show profit analysis"
+                                                )
+                                            }
+                                            className="
                 bg-gray-50
                 border
                 border-yellow-100
@@ -275,17 +275,17 @@ export default function AskData() {
                 transition-all
                 duration-300
             "
-        >
-            Profit Analysis
-        </button>
+                                        >
+                                            Profit Analysis
+                                        </button>
 
-        <button
-            onClick={() =>
-                handleSuggestion(
-                    "Give dataset summary"
-                )
-            }
-            className="
+                                        <button
+                                            onClick={() =>
+                                                handleSuggestion(
+                                                    "Give dataset summary"
+                                                )
+                                            }
+                                            className="
                 bg-gray-50
                 border
                 border-yellow-100
@@ -299,17 +299,17 @@ export default function AskData() {
                 transition-all
                 duration-300
             "
-        >
-            Dataset Summary
-        </button>
+                                        >
+                                            Dataset Summary
+                                        </button>
 
-        <button
-            onClick={() =>
-                handleSuggestion(
-                    "Provide business insights"
-                )
-            }
-            className="
+                                        <button
+                                            onClick={() =>
+                                                handleSuggestion(
+                                                    "Provide business insights"
+                                                )
+                                            }
+                                            className="
                 bg-gray-50
                 border
                 border-yellow-100
@@ -323,17 +323,17 @@ export default function AskData() {
                 transition-all
                 duration-300
             "
-        >
-            Business Insights
-        </button>
+                                        >
+                                            Business Insights
+                                        </button>
 
-        <button
-            onClick={() =>
-                handleSuggestion(
-                    "Show top performing categories"
-                )
-            }
-            className="
+                                        <button
+                                            onClick={() =>
+                                                handleSuggestion(
+                                                    "Show top performing categories"
+                                                )
+                                            }
+                                            className="
                 bg-gray-50
                 border
                 border-yellow-100
@@ -347,17 +347,17 @@ export default function AskData() {
                 transition-all
                 duration-300
             "
-        >
-         Top Categories
-        </button>
+                                        >
+                                            Top Categories
+                                        </button>
 
-        <button
-            onClick={() =>
-                handleSuggestion(
-                    "What are the key recommendations?"
-                )
-            }
-            className="
+                                        <button
+                                            onClick={() =>
+                                                handleSuggestion(
+                                                    "What are the key recommendations?"
+                                                )
+                                            }
+                                            className="
                 bg-gray-50
                 border
                 border-yellow-100
@@ -371,13 +371,13 @@ export default function AskData() {
                 transition-all
                 duration-300
             "
-        >
-            Recommendations
-        </button>
+                                        >
+                                            Recommendations
+                                        </button>
 
-    </div>
+                                    </div>
 
-</div>
+                                </div>
                             </div>
                         )
                     }
@@ -467,7 +467,7 @@ export default function AskData() {
                                         border-slate-200
                                     ">
 
-                                         AI Thinking...
+                                        AI Thinking...
 
                                     </div>
 
