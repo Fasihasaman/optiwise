@@ -91,7 +91,8 @@ def train_model(df):
 
             return None
 
-        
+        if len(df) > 5000:
+           df = df.sample(5000, random_state=42)
         # FEATURES & TARGET
         
 
@@ -122,14 +123,10 @@ def train_model(df):
        
 
         model = RandomForestRegressor(
-
-            n_estimators=100,
-
-            random_state=42,
-
-            n_jobs=-1
+        n_estimators=10,
+        random_state=42,
+        n_jobs=1
         )
-
         model.fit(X, y)
         model_store.model = model
         model_store.X_columns = list(X.columns)
