@@ -84,7 +84,7 @@ Return ONLY this JSON:
         try:
 
             response = client.models.generate_content(
-                model="gemini-2.5-flash",
+                model="gemini-2.5-flash-lite",
                 contents=prompt
             )
 
@@ -97,10 +97,21 @@ Return ONLY this JSON:
 
             print("Gemini Chart Error:", e)
 
+            print("USING LOCAL FALLBACK")
+
+    
+   
+
+    
+            object_cols = df.select_dtypes(include=["object"]).columns.tolist()
+            numeric_cols = df.select_dtypes(include="number").columns.tolist()
+            print("Object Columns:", object_cols)
+            print("Numeric Columns:", numeric_cols)
+
             return {
-                "chartType": "bar",
-                "title": "Sales Analysis",
-                "xAxis": "",
-                "yAxis": "",
-                "aggregation": "sum"
-            }
+             "chartType": "bar",
+             "title": "Sales Analysis",
+             "xAxis": object_cols[0] if object_cols else df.columns[0],
+             "yAxis": numeric_cols[0] if numeric_cols else df.columns[-1],
+             "aggregation": "sum"
+              }
