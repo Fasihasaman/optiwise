@@ -70,15 +70,28 @@ class SalesChartAI:
         print("X =", x)
         print("Y =", y)
 
+# -------------------------------
+# FALLBACK IF GEMINI FAILS
+# -------------------------------
+
         if x is None:
-            raise Exception(
-                f"Invalid xAxis '{chart['xAxis']}'"
-            )
+
+    # Prefer a categorical column
+          object_cols = self.df.select_dtypes(include=["object"]).columns.tolist()
+
+        if object_cols:
+         x = object_cols[0]
+        else:
+         x = self.df.columns[0]
 
         if y is None:
-            raise Exception(
-                f"Invalid yAxis '{chart['yAxis']}'"
-            )
+
+         numeric_cols = self.df.select_dtypes(include="number").columns.tolist()
+ 
+        if numeric_cols:
+         y = numeric_cols[0]
+        else:
+         raise Exception("No numeric column found in dataset.")
 
         # Convert numeric column
         self.df[y] = self.clean_numeric(self.df[y])
