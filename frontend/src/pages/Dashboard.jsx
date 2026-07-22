@@ -34,9 +34,9 @@ export default function Dashboard() {
         data?.insights
     );
 
-   
+
     // LOAD DATA
-   
+
 
     useEffect(() => {
 
@@ -68,9 +68,9 @@ export default function Dashboard() {
 
     }, []);
 
-   
+
     // CLEAR DATA FUNCTION
-   
+
 
     const clearDataset = () => {
 
@@ -85,9 +85,9 @@ export default function Dashboard() {
         setData(null);
     };
 
-   
+
     // NO DATA SCREEN
-   
+
 
     if (!data) {
 
@@ -171,9 +171,9 @@ export default function Dashboard() {
 
         >
 
-           
+
             {/* HEADER */}
-           
+
 
             <div className="
                 bg-white/90
@@ -264,9 +264,9 @@ export default function Dashboard() {
 
             </div>
 
-           
+
             {/* KPI SECTION */}
-           
+
 
             <div className="mb-10">
 
@@ -274,9 +274,9 @@ export default function Dashboard() {
 
             </div>
 
-           
+
             {/* SALES CHART */}
-           
+
 
             <div className="
                 bg-white/90
@@ -306,15 +306,15 @@ export default function Dashboard() {
                 </h2>
 
                 <SalesChart
-                    data={data.recommended_charts}
+                    data={data}
                 />
 
             </div>
 
-            
-           
+
+
             {/* XAI INSIGHTS */}
-           
+
 
             {
                 (
@@ -344,14 +344,14 @@ export default function Dashboard() {
                 )
             }
 
-            
-
-  
 
 
-           
+
+
+
+
             {/* AI SUMMARY */}
-           
+
 
             <div className="
                 bg-white/90

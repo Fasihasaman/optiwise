@@ -26,45 +26,66 @@ export default function Upload() {
             return;
         }
 
+
         try {
 
             setLoading(true);
 
-            const formData =
-                new FormData();
+
+            const formData = new FormData();
+
 
             formData.append(
                 "file",
                 selectedFile
             );
 
-            
+
             const API = import.meta.env.VITE_API_URL;
 
-            await axios.post(
-            `${API}/upload`,
-             formData
-              );
 
-            // SAVE DASHBOARD DATA
+            const res = await axios.post(
+                `${API}/upload`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type":
+                            "multipart/form-data"
+                    }
+                }
+            );
+
+
+            console.log(
+                "UPLOAD RESPONSE:",
+                res.data
+            );
+
 
             localStorage.setItem(
+
                 "dashboardData",
+
                 JSON.stringify(
                     res.data
                 )
+
             );
+
 
             localStorage.setItem(
+
                 "datasetUploaded",
+
                 "true"
+
             );
+
 
             setMessage(
-                "Dataset uploaded successfully "
+                "Dataset uploaded successfully"
             );
 
-            // NAVIGATE
 
             setTimeout(() => {
 
@@ -74,18 +95,29 @@ export default function Upload() {
 
             }, 1200);
 
+
+
         } catch (err) {
 
-            console.log(err);
+
+            console.log(
+                "UPLOAD ERROR:",
+                err.response?.data || err.message
+            );
+
 
             setMessage(
-                "Upload failed "
+                "Upload failed"
             );
+
 
         } finally {
 
+
             setLoading(false);
+
         }
+
     };
 
     return (
@@ -100,7 +132,7 @@ export default function Upload() {
                 p-8
             "
 
-            
+
         >
 
             {/* MAIN CONTENT */}
