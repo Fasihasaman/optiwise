@@ -12,22 +12,15 @@ def train_model(df):
 
         df = df.copy()
 
-        
         # REMOVE NULL VALUES
-        
-
         df = df.dropna()
 
         if len(df) < 10:
-
             print("MODEL ERROR: Not enough rows")
-
             return None
 
-        
-        # HANDLE DATE COLUMNS
-        
 
+        # HANDLE DATE COLUMNS
         for col in df.columns:
 
             try:
@@ -48,9 +41,9 @@ def train_model(df):
             except:
                 pass
 
-        
-        # ENCODE TEXT COLUMNS
-        
+
+
+        # ENCODE CATEGORICAL COLUMNS
 
         for col in df.select_dtypes(
             include=["object"]
@@ -67,42 +60,48 @@ def train_model(df):
             except Exception as e:
 
                 print(
-                    f"Encoding Error in {col}:",
+                    f"Encoding error {col}:",
                     e
                 )
 
-        
-        # KEEP NUMERIC DATA ONLY
-        
+
+
+        # KEEP ONLY NUMERIC DATA
 
         df = df.select_dtypes(
             include=[np.number]
         )
 
-        
-        # CHECK DATA
-        
 
         if df.shape[1] < 2:
 
             print(
-                "MODEL ERROR: Need at least 2 numeric columns"
+                "MODEL ERROR: Need minimum two numeric columns"
             )
 
             return None
 
-        if len(df) > 5000:
-           df = df.sample(5000, random_state=42)
-        # FEATURES & TARGET
-        
+
+
+        # LIMIT DATA SIZE
+
+        if len(df) > 500:
+
+            df = df.sample(
+                500,
+                random_state=42
+            )
+
+
+        # FEATURES AND TARGET
 
         X = df.iloc[:, :-1]
 
         y = df.iloc[:, -1]
 
-        
-        # REMOVE INF VALUES
-        
+
+
+        # CLEAN INF VALUES
 
         X = X.replace(
             [np.inf, -np.inf],
@@ -111,6 +110,7 @@ def train_model(df):
 
         X = X.fillna(0)
 
+
         y = y.replace(
             [np.inf, -np.inf],
             np.nan
@@ -118,26 +118,48 @@ def train_model(df):
 
         y = y.fillna(0)
 
-       
-        # TRAIN MODEL
-       
+
+
+        # RANDOM FOREST MODEL
 
         model = RandomForestRegressor(
-        n_estimators=10,
-        random_state=42,
-        n_jobs=1
+
+            n_estimators=100,
+
+            random_state=42,
+
+            n_jobs=-1
+
         )
-        model.fit(X, y)
+
+
+        model.fit(
+            X,
+            y
+        )
+
+
+        # STORE MODEL
+
         model_store.model = model
-        model_store.X_columns = list(X.columns)
+
+        model_store.X_columns = list(
+            X.columns
+        )
+
         model_store.target_column = y.name
+
+
+
         predictions = model.predict(
             X.head(5)
         )
 
+
         print(
             "MODEL TRAINED SUCCESSFULLY"
         )
+
 
         return {
 
@@ -151,14 +173,14 @@ def train_model(df):
 
         }
 
+
+
     except Exception as e:
 
-        print("\n MODEL ERROR ")
+        print(
+            "MODEL ERROR"
+        )
 
         traceback.print_exc()
-
-        print("Error:", str(e))
-
-        print("\n")
 
         return None
