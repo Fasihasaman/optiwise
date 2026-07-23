@@ -34,34 +34,43 @@ export default function DatasetExplorer() {
 
     }, []);
 
-    const loadDataset = async () => {
+   const loadDataset = async () => {
 
-        try {
+    try {
 
-            setLoading(true);
+        setLoading(true);
 
-            const API = import.meta.env.VITE_API_URL;
+        const API = import.meta.env.VITE_API_URL;
 
-            await axios.get(
-                `${API}/dataset-explorer`
-            );
-            console.log(res.data);
-            setRows(res.data.sample || []);
+        const res = await axios.get(
+            `${API}/dataset-explorer`
+        );
 
-            setColumns(res.data.columns || []);
+        console.log("Explorer Response:", res.data);
 
-            setStatistics(res.data.statistics || {});
-            setDatasetName(res.data.dataset_name || "Uploaded Dataset");
+        setRows(res.data.sample || []);
+        setColumns(res.data.columns || []);
+        setStatistics(res.data.statistics || {});
+        setDatasetName(
+            res.data.dataset_name || "Uploaded Dataset"
+        );
 
-        } catch (e) {
+    } catch (err) {
 
-            console.log(e);
+        console.error("Explorer Error:", err);
 
-        }
+        setRows([]);
+        setColumns([]);
+        setStatistics({});
+        setDatasetName("");
+
+    } finally {
 
         setLoading(false);
 
-    };
+    }
+
+};
 
     const uniqueValues = useMemo(() => {
 
@@ -104,8 +113,7 @@ export default function DatasetExplorer() {
                 row =>
 
                     String(row[appliedFilterColumn]) ===
-
-                    String(filterValue)
+                    String(appliedFilterValue)
 
             );
 
@@ -150,13 +158,10 @@ export default function DatasetExplorer() {
         appliedSortOrder
     ]);
 
-    const totalPages = Math.ceil(
-
-        filteredRows.length /
-
-        rowsPerPage
-
-    );
+    const totalPages = Math.max(
+    1,
+    Math.ceil(filteredRows.length / rowsPerPage)
+     );
 
     const currentRows = filteredRows.slice(
 
