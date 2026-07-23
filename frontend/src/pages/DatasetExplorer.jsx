@@ -34,43 +34,41 @@ export default function DatasetExplorer() {
 
     }, []);
 
-   const loadDataset = async () => {
-
-    try {
+    const loadDataset = () => {
 
         setLoading(true);
 
-        const API = import.meta.env.VITE_API_URL;
+        const explorer = JSON.parse(
 
-        const res = await axios.get(
-            `${API}/dataset-explorer`
+            localStorage.getItem(
+                "datasetExplorer"
+            )
+
         );
 
-        console.log("Explorer Response:", res.data);
+        if (explorer) {
 
-        setRows(res.data.sample || []);
-        setColumns(res.data.columns || []);
-        setStatistics(res.data.statistics || {});
-        setDatasetName(
-            res.data.dataset_name || "Uploaded Dataset"
-        );
+            setDatasetName(
+                explorer.dataset_name || ""
+            );
 
-    } catch (err) {
+            setRows(
+                explorer.sample || []
+            );
 
-        console.error("Explorer Error:", err);
+            setColumns(
+                explorer.columns || []
+            );
 
-        setRows([]);
-        setColumns([]);
-        setStatistics({});
-        setDatasetName("");
+            setStatistics(
+                explorer.statistics || {}
+            );
 
-    } finally {
+        }
 
         setLoading(false);
 
-    }
-
-};
+    };
 
     const uniqueValues = useMemo(() => {
 
@@ -159,9 +157,9 @@ export default function DatasetExplorer() {
     ]);
 
     const totalPages = Math.max(
-    1,
-    Math.ceil(filteredRows.length / rowsPerPage)
-     );
+        1,
+        Math.ceil(filteredRows.length / rowsPerPage)
+    );
 
     const currentRows = filteredRows.slice(
 

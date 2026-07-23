@@ -71,6 +71,15 @@ export default function Upload() {
                 )
 
             );
+            localStorage.setItem(
+
+               "datasetExplorer",
+
+                JSON.stringify(
+                 res.data.datasetExplorer
+                 )
+
+            );
 
 
             localStorage.setItem(

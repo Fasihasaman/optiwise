@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify
 import services.data_store as store
 import numpy as np
 import os
+import pandas as pd
 
 explorer_bp = Blueprint("explorer_bp", __name__)
 
@@ -9,10 +10,15 @@ explorer_bp = Blueprint("explorer_bp", __name__)
 @explorer_bp.route("/dataset-explorer", methods=["GET"])
 def dataset_explorer():
 
-    df = store.data_store
+  
 
-    if df is None:
+    if not store.file_path or not os.path.exists(store.file_path):
         return jsonify({"error": "No dataset uploaded"}), 400
+
+    if store.file_path.endswith(".csv"):
+        df = pd.read_csv(store.file_path)
+    else:
+        df = pd.read_excel(store.file_path)
 
     # Dataset name
     dataset_name = (
